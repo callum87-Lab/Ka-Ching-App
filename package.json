@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Ka-Ching! mobile app - local-only comic pre-order tracker (Stage 1: manual entry)",
   "private": true,
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "build": "vite build",
