@@ -1,3 +1,5 @@
+![Ka-Ching!](readme-banner.png)
+
 # Ka-Ching! App
 
 The Android companion to [Ka-Ching!](https://github.com/callum87-Lab/Ka-Ching)
