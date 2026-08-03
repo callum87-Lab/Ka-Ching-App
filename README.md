@@ -14,6 +14,35 @@ Same philosophy as the web app: this doesn't track what you own or store
 cover art. It answers what's due, what it'll cost, and what your forecast
 looks like this month and next.
 
+## Gallery
+
+Click any screenshot to view it full-size.
+
+<table>
+<tr>
+<th>Dashboard</th>
+<th>Spend overview</th>
+</tr>
+<tr>
+<td><a href="screenshots/dashboard.jpg"><img src="screenshots/dashboard.jpg" width="400"></a></td>
+<td><a href="screenshots/spend-overview.jpg"><img src="screenshots/spend-overview.jpg" width="400"></a></td>
+</tr>
+<tr>
+<th>Calendar</th>
+<th>Insights</th>
+</tr>
+<tr>
+<td><a href="screenshots/calendar.jpg"><img src="screenshots/calendar.jpg" width="400"></a></td>
+<td><a href="screenshots/insights.jpg"><img src="screenshots/insights.jpg" width="400"></a></td>
+</tr>
+<tr>
+<th>Sync with the web app</th>
+</tr>
+<tr>
+<td><a href="screenshots/sync.jpg"><img src="screenshots/sync.jpg" width="400"></a></td>
+</tr>
+</table>
+
 ## What it actually does
 
 - **Local-first, works entirely offline** — a real local SQLite database on
@@ -112,3 +141,36 @@ each intentionally deferred rather than half-built:
   screenshots)
 - Not yet on F-Droid or the Play Store — build it yourself for now, a
   GitHub Release with a downloadable `.apk` is the near-term plan
+
+## AI involvement
+
+Like the [web app](https://github.com/callum87-Lab/Ka-Ching), this was built
+through heavy, iterative collaboration with an LLM (Claude). A lot of the
+actual code came out of that process rather than being hand-typed line by
+line — but every feature, every parser, and every decision about what this
+should and shouldn't do was directed and made by a real person, not
+generated and shipped unchecked.
+
+In practice that meant: real bugs (including a long reconciliation effort to
+get this app's spend figures to genuinely match the web app's, down to the
+penny) were found and fixed through real-device testing and by re-deriving
+numbers against actual data, not assumed away. Scope decisions — what this
+app does and deliberately doesn't do, the licence, what got rejected outright
+— were all real calls made by a person, not defaults left unquestioned.
+
+Happy to go into more detail on the actual process if anyone's curious -
+open an issue.
+
+## Licence
+
+All rights reserved, for now. This code is public on GitHub so you can read
+it, learn from it, and see exactly what it does with your data - but there's
+no open-source licence attached at the moment, so reusing, modifying, or
+redistributing it isn't permitted without asking first. This is a deliberate
+choice while it's actively maintained, not an oversight.
+
+If time to maintain it actively becomes harder to find down the line, the
+plan is to open it up properly under AGPL-3.0 - a licence that still allows
+forks and contributions, but requires anyone who modifies and runs their own
+version (including as a hosted service) to keep it open source too, rather
+than it quietly becoming someone else's closed, rebranded product.
