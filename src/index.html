@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ka-Ching!</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="top-bar">
+    <button type="button" class="menu-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+      <span class="menu-btn-line"></span>
+      <span class="menu-btn-line"></span>
+      <span class="menu-btn-line"></span>
+    </button>
+    <div class="menu-dropdown hidden" id="menu-dropdown">
+      <button type="button" class="menu-dropdown-item" data-view="settings">Settings</button>
+    </div>
+  </div>
+
+  <div class="frame">
+    <header class="app-header">
+      <img src="/logo.png" alt="Ka-Ching!" class="app-logo">
+    </header>
+
+    <main id="view-dashboard" class="view">
+      <div class="bulk-toolbar hidden" id="dashboard-bulk-toolbar">
+        <span class="mono" id="dashboard-bulk-count">0 selected</span>
+        <button type="button" class="btn-tiny" id="dashboard-bulk-mark-paid-btn">Mark paid</button>
+        <button type="button" class="btn-tiny" id="dashboard-bulk-cancel-btn">Cancel</button>
+        <button type="button" class="btn-tiny btn-remove-all" id="dashboard-bulk-remove-btn">Remove</button>
+      </div>
+
+      <section class="block hidden" id="duplicates-section">
+        <div class="block-head block-head-with-toggle">
+          <h2 class="warning-head">&#9888; Possible duplicate orders</h2>
+          <button type="button" class="section-collapse-toggle" data-target="duplicates-body" aria-label="Collapse section">&#9662;</button>
+        </div>
+        <div class="section-body" id="duplicates-body">
+          <div class="groups" id="duplicates-groups"></div>
+        </div>
+      </section>
+
+      <section class="block hidden" id="ghost-items-section">
+        <div class="block-head block-head-with-toggle">
+          <h2 class="warning-head" id="ghost-items-count">&#9888; Items with no order number</h2>
+          <button type="button" class="section-collapse-toggle" data-target="ghost-items-body" aria-label="Collapse section">&#9662;</button>
+        </div>
+        <div class="section-body" id="ghost-items-body">
+          <p class="muted item-form-hint">
+            These came from a parser issue and can't be matched to a real order -
+            almost always a duplicate of something already tracked properly.
+            Check before keeping.
+          </p>
+          <button type="button" class="btn-tiny btn-remove-all" id="ghost-items-remove-all-btn">Remove all</button>
+          <ul class="item-list" id="ghost-items-list"></ul>
+        </div>
+      </section>
+
+      <section class="block hidden" id="awaiting-charge-section">
+        <div class="block-head block-head-with-toggle">
+          <h2 class="warning-head" id="awaiting-charge-count">&#9200; Awaiting charge</h2>
+          <button type="button" class="section-collapse-toggle" data-target="awaiting-charge-body" aria-label="Collapse section">&#9662;</button>
+        </div>
+        <div class="section-body" id="awaiting-charge-body">
+          <p class="muted item-form-hint">
+            These released a while ago but are still sitting unpaid and unmarked.
+            Usually just a normal short delay before the retailer charges - worth
+            a check if any of these are sitting here a while.
+          </p>
+          <ul class="item-list" id="awaiting-charge-list"></ul>
+        </div>
+      </section>
+
+      <section class="block" id="still-due-budget-section">
+        <div class="dual-ring-row">
+          <div class="dual-ring-col">
+            <div class="dual-ring-wrap" id="still-due-ring-wrap"></div>
+            <span class="dual-ring-label">Still due</span>
+            <span class="dual-ring-value mono" id="still-due-total">£0.00</span>
+          </div>
+          <div class="dual-ring-divider"></div>
+          <div class="dual-ring-col">
+            <div class="dual-ring-wrap" id="budget-ring-wrap"></div>
+            <span class="dual-ring-label">Budget</span>
+            <span class="dual-ring-value mono" id="budget-line"></span>
+          </div>
+        </div>
+        <p class="muted dual-ring-caption" id="still-due-caption"></p>
+        <p class="muted dual-ring-forecast" id="next-month-forecast"></p>
+        <p class="muted dual-ring-forecast" id="shipping-estimate-note"></p>
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <h2 id="year-stats-label">This year so far</h2>
+        </div>
+        <p class="mono" id="year-stats-line"></p>
+        <p class="muted" id="all-time-stats-line"></p>
+      </section>
+
+      <div class="tab-row" id="dashboard-shop-tabs"></div>
+
+      <div class="insight-card">
+        <div class="insight-card-title">Overview</div>
+        <div class="insight-card-stats">
+          <div class="insight-stat">
+            <span class="insight-stat-label">Total tracked</span>
+            <span class="insight-stat-value mono" id="stat-total-tracked">£0.00</span>
+          </div>
+          <div class="insight-stat">
+            <span class="insight-stat-label">Priciest item</span>
+            <span class="insight-stat-value mono" id="stat-priciest">£0.00</span>
+          </div>
+          <div class="insight-stat">
+            <span class="insight-stat-label">Average price</span>
+            <span class="insight-stat-value mono" id="stat-average">£0.00</span>
+          </div>
+        </div>
+        <button type="button" class="insight-card-note insight-card-note-link hidden" id="stat-priciest-note"></button>
+      </div>
+
+      <section class="block" id="this-week-section">
+        <div class="block-head">
+          <h2>This week</h2>
+          <div class="shipment-nav-meta">
+            <span class="block-total mono" id="this-week-total"></span>
+            <button type="button" class="section-collapse-toggle" data-target="this-week-body" aria-label="Collapse section">&#9662;</button>
+          </div>
+        </div>
+        <div class="section-body" id="this-week-body">
+          <div class="groups" id="this-week-groups"></div>
+        </div>
+      </section>
+
+      <section class="block" id="dash-shipment-section">
+        <div class="block-head">
+          <div class="cal-nav">
+            <button type="button" id="dash-shipment-prev-btn" class="btn-tiny" aria-label="Previous month">&larr;</button>
+            <h2 id="dash-shipment-month-label">This month, by shipment</h2>
+            <button type="button" id="dash-shipment-next-btn" class="btn-tiny" aria-label="Next month">&rarr;</button>
+          </div>
+          <div class="shipment-nav-meta">
+            <button type="button" id="dash-shipment-today-btn" class="btn-tiny hidden">Today</button>
+            <span class="block-total mono" id="dash-shipment-total"></span>
+            <button type="button" class="section-collapse-toggle" data-target="dash-shipment-body" aria-label="Collapse section">&#9662;</button>
+          </div>
+        </div>
+        <div class="section-body" id="dash-shipment-body">
+          <div class="groups" id="dash-shipment-groups"></div>
+        </div>
+      </section>
+
+      <section class="block hidden" id="recently-cancelled-section">
+        <div class="block-head block-head-with-toggle">
+          <h2>Recently cancelled</h2>
+          <button type="button" class="section-collapse-toggle" data-target="recently-cancelled-body" aria-label="Expand section">&#9656;</button>
+        </div>
+        <div class="section-body collapsed" id="recently-cancelled-body">
+          <ul class="item-list item-list-simple" id="recently-cancelled-list"></ul>
+        </div>
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <h2>Spend trend</h2>
+          <div class="tab-row chart-range-tabs" id="dashboard-chart-range-tabs">
+            <button type="button" class="chart-range-btn" data-range="week">Week</button>
+            <button type="button" class="chart-range-btn active" data-range="month">Month</button>
+            <button type="button" class="chart-range-btn" data-range="6month">6M</button>
+          </div>
+        </div>
+        <div id="spend-trend-chart" class="trend-chart-wrap"></div>
+      </section>
+    </main>
+
+    <main id="view-log-orders" class="view hidden">
+      <div class="tab-row">
+        <button type="button" class="tab-btn active" data-tab="paste">Paste Orders</button>
+        <button type="button" class="tab-btn" data-tab="manual">Manual Entry</button>
+      </div>
+
+      <section class="block tab-panel hidden" id="tab-manual">
+        <div class="block-head">
+          <h2>Add items</h2>
+        </div>
+        <form id="add-item-form">
+          <div class="search-filter-row">
+            <label>
+              <span>Release date</span>
+              <input type="date" id="field-release-date" name="release_date" required>
+            </label>
+            <label class="autocomplete-wrap">
+              <span>Source / retailer</span>
+              <input type="text" id="field-shop" name="shop" required autocomplete="off" placeholder="e.g. Forbidden Planet">
+              <ul class="autocomplete-list hidden" id="shop-autocomplete-list"></ul>
+            </label>
+          </div>
+          <div class="search-date-presets">
+            <button type="button" class="date-preset-btn" id="manual-shop-hint-whatnot">Whatnot</button>
+          </div>
+          <div class="form-row-grid">
+            <label>
+              <span>Order / invoice # (optional)</span>
+              <input type="text" id="field-order-number" name="order_number" placeholder="e.g. 05-13811-02460">
+            </label>
+            <label>
+              <span>Shipping cost (optional)</span>
+              <input type="number" id="field-shipping" name="shipping" step="0.01" min="0" placeholder="e.g. 4.00">
+            </label>
+          </div>
+          <label>
+            <span>Tracking number (optional)</span>
+            <input type="text" id="field-tracking-number" name="tracking_number" placeholder="e.g. NP678811691GB">
+          </label>
+
+          <div id="comic-rows">
+            <div class="comic-row">
+              <input type="text" required placeholder="Comic name (e.g. Comic On Screen #4)" class="comic-row-name">
+              <input type="number" step="0.01" min="0" required placeholder="Price" class="comic-row-price">
+              <button type="button" class="btn-remove-row" title="Remove this row" aria-label="Remove this row">&times;</button>
+            </div>
+          </div>
+          <button type="button" id="add-row-btn" class="btn-add-row">+ Add another comic</button>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="field-already-paid">
+            <span>Already paid (applies to all rows above)</span>
+          </label>
+          <button type="submit">Add item(s)</button>
+        </form>
+        <p class="muted item-form-hint" id="form-status"></p>
+        <p class="muted item-form-hint">
+          Set the release date and shop once, then add every comic from that
+          same order before submitting - one shipment, one form. The order
+          number and shipping cost are both optional, but adding them lets
+          that shop's shipping figure be exact rather than an estimate.
+          Submitting keeps the shop, date, tracking number, and paid status
+          set for next time - handy when one delivery covers several
+          separate orders (a Whatnot bundle, say), since only the order
+          number and the item itself need changing between them.
+        </p>
+      </section>
+
+      <section class="block tab-panel" id="tab-paste">
+        <div class="block-head">
+          <h2>Paste order text</h2>
+        </div>
+        <p class="muted item-form-hint">
+          Paste a Forbidden Planet order-history page and every detail -
+          shop, order number, release date, paid status - comes in
+          automatically. Anything else falls back to a generic reader that
+          only picks up a name, a price, and a nearby date where one's
+          genuinely present; it never guesses a price or invents a name.
+        </p>
+        <p class="muted item-form-hint">
+          Detected automatically, but if you know which shop this is:
+        </p>
+        <div class="search-date-presets">
+          <button type="button" class="date-preset-btn" id="paste-shop-hint-fp" data-shop-hint="forbidden_planet">Forbidden Planet</button>
+          <button type="button" class="date-preset-btn" id="paste-shop-hint-ebay" data-shop-hint="ebay">eBay</button>
+        </div>
+        <textarea id="paste-textarea" rows="8" placeholder="Paste order text here..."></textarea>
+        <button type="button" id="paste-parse-btn">Import</button>
+        <span class="preview-meta-tag hidden" id="paste-detected-label"></span>
+        <p class="muted item-form-hint hidden" id="paste-not-found-hint"></p>
+        <p class="muted item-form-hint" id="paste-import-result"></p>
+      </section>
+    </main>
+
+    <main id="view-calendar" class="view hidden">
+      <div class="bulk-toolbar hidden" id="calendar-bulk-toolbar">
+        <span class="mono" id="calendar-bulk-count">0 selected</span>
+        <button type="button" class="btn-tiny" id="calendar-bulk-mark-paid-btn">Mark paid</button>
+        <button type="button" class="btn-tiny" id="calendar-bulk-cancel-btn">Cancel</button>
+        <button type="button" class="btn-tiny btn-remove-all" id="calendar-bulk-remove-btn">Remove</button>
+      </div>
+
+      <div class="tab-row" id="calendar-shop-tabs"></div>
+
+      <section class="block">
+        <div class="block-head cal-nav">
+          <button type="button" id="cal-prev-btn" class="btn-tiny" aria-label="Previous month">&larr;</button>
+          <h2 id="cal-month-label">August 2026</h2>
+          <button type="button" id="cal-next-btn" class="btn-tiny" aria-label="Next month">&rarr;</button>
+        </div>
+        <div class="cal-export-row">
+          <button type="button" id="cal-export-ics-btn" class="btn-tiny">Download .ics</button>
+          <button type="button" id="cal-today-btn" class="btn-tiny hidden">Today</button>
+        </div>
+        <div class="cal-grid-header">
+          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+        </div>
+        <div id="cal-grid" class="cal-grid"></div>
+        <p class="muted item-form-hint">Blank days are release-free. Tap a day above to jump straight to it below.</p>
+      </section>
+      <section class="block">
+        <div class="block-head">
+          <h2 id="cal-agenda-label">This month's releases</h2>
+        </div>
+        <div id="cal-agenda"></div>
+      </section>
+    </main>
+
+    <main id="view-search" class="view hidden">
+      <div class="bulk-toolbar hidden" id="bulk-toolbar">
+        <span class="mono" id="bulk-count">0 selected</span>
+        <button type="button" class="btn-tiny" id="bulk-mark-paid-btn">Mark paid</button>
+        <button type="button" class="btn-tiny" id="bulk-cancel-btn">Cancel</button>
+        <button type="button" class="btn-tiny btn-remove-all" id="bulk-remove-btn">Remove</button>
+      </div>
+
+      <section class="block">
+        <div class="block-head">
+          <h2>Search</h2>
+        </div>
+        <label>
+          <span>Name, shop, or order #</span>
+          <input type="text" id="search-query" placeholder="Search...">
+        </label>
+        <div class="search-filter-row">
+          <label>
+            <span>Shop</span>
+            <select id="search-shop"><option value="">All shops</option></select>
+          </label>
+          <label>
+            <span>Status</span>
+            <select id="search-status">
+              <option value="all">All</option>
+              <option value="paid">Paid</option>
+              <option value="unpaid">Unpaid</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </label>
+          <label>
+            <span>Sort</span>
+            <select id="search-sort"></select>
+          </label>
+        </div>
+        <div class="search-filter-row">
+          <label>
+            <span>From</span>
+            <input type="date" id="search-start-date">
+          </label>
+          <label>
+            <span>To</span>
+            <input type="date" id="search-end-date">
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" id="search-include-undated" checked>
+            <span>Include items with no date</span>
+          </label>
+          <label>
+            <span>Min price</span>
+            <input type="number" step="0.01" min="0" id="search-min-price" placeholder="0.00">
+          </label>
+          <label>
+            <span>Max price</span>
+            <input type="number" step="0.01" min="0" id="search-max-price" placeholder="0.00">
+          </label>
+        </div>
+        <div class="search-date-presets">
+          <button type="button" class="date-preset-btn date-preset-btn-clear" id="search-clear-btn">Clear</button>
+          <button type="button" class="date-preset-btn" data-preset="month">This Month</button>
+          <button type="button" class="date-preset-btn" data-preset="year">This Year</button>
+          <button type="button" class="date-preset-btn" id="sort-most-expensive-btn">Most expensive</button>
+          <button type="button" class="date-preset-btn" id="sort-cheapest-btn">Cheapest</button>
+        </div>
+        <p class="muted item-form-hint hidden" id="search-preset-label"></p>
+
+        <div id="search-totals-row"></div>
+        <ul class="item-list" id="search-results"></ul>
+      </section>
+    </main>
+
+    <main id="view-insights" class="view hidden">
+      <section class="block">
+        <div class="block-head">
+          <h2>Insights</h2>
+        </div>
+        <div class="ratio-ring-row">
+          <div class="ratio-ring-card">
+            <div class="ratio-ring-top">
+              <div class="ratio-ring-wrap" id="insights-preorder-ring"></div>
+              <div class="ratio-ring-legend">
+                <div class="ratio-legend-row">
+                  <span class="ratio-legend-dot" style="background: var(--neon-blue);"></span>
+                  <span>Pre-order</span>
+                  <span class="mono ratio-legend-value" id="insights-preorder-legend-pct" style="color: var(--neon-blue);"></span>
+                </div>
+                <div class="ratio-legend-row">
+                  <span class="ratio-legend-dot" style="background: var(--neon-violet);"></span>
+                  <span>Released</span>
+                  <span class="mono ratio-legend-value" id="insights-released-legend-pct" style="color: var(--neon-violet);"></span>
+                </div>
+              </div>
+            </div>
+            <div class="ring-row-divider hidden" id="insights-coming-up-wrap">
+              <div class="insight-next-list">
+                <span class="insight-next-list-title">Coming up</span>
+                <div id="insights-coming-up-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-card-title">Spend overview</div>
+          <div class="insight-card-stats">
+            <div class="insight-stat">
+              <span class="insight-stat-label">Priciest month</span>
+              <span class="insight-stat-value mono" id="insights-best-month">-</span>
+              <span class="insight-stat-sub" id="insights-best-month-sub"></span>
+            </div>
+            <div class="insight-stat">
+              <span class="insight-stat-label">Avg per month</span>
+              <span class="insight-stat-value mono" id="insights-avg-per-month">£0.00</span>
+              <span class="insight-stat-sub" id="insights-avg-per-month-trend"></span>
+            </div>
+            <div class="insight-stat">
+              <span class="insight-stat-label">Next month</span>
+              <span class="insight-stat-value mono" id="insights-next-month">£0.00</span>
+              <span class="insight-stat-sub">forecast so far</span>
+            </div>
+          </div>
+          <div class="insight-full-bar-row hidden" id="insights-budget-bar-wrap">
+            <div class="insight-full-bar-label">
+              <span>This month vs budget</span>
+              <span id="insights-budget-bar-label"></span>
+            </div>
+            <div class="insight-full-bar-track"><div class="insight-full-bar-fill" id="insights-budget-bar-fill"></div></div>
+          </div>
+          <p class="insight-card-note" id="insights-spend-note"></p>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-card-title">Per issue</div>
+          <div class="insight-card-stats">
+            <div class="insight-stat">
+              <span class="insight-stat-label">Total tracked</span>
+              <span class="insight-stat-value mono" id="insights-count">0</span>
+              <span class="insight-stat-sub" id="insights-count-sub"></span>
+            </div>
+            <div class="insight-stat">
+              <span class="insight-stat-label">Priciest issue</span>
+              <span class="insight-stat-value mono" id="insights-priciest">£0.00</span>
+            </div>
+            <div class="insight-stat">
+              <span class="insight-stat-label">Average issue</span>
+              <span class="insight-stat-value mono" id="insights-average">£0.00</span>
+            </div>
+          </div>
+          <div class="insight-full-bar-row">
+            <div class="insight-full-bar-label">
+              <span>Average vs priciest issue</span>
+              <span id="insights-avg-vs-priciest-label"></span>
+            </div>
+            <div class="insight-full-bar-track"><div class="insight-full-bar-fill" id="insights-avg-vs-priciest-fill" style="background: var(--neon-violet);"></div></div>
+          </div>
+          <div class="insight-full-bar-row">
+            <div class="insight-full-bar-label">
+              <span>Comics vs shipping, all time</span>
+              <span id="insights-comics-shipping-label"></span>
+            </div>
+            <div class="insight-split-bar-track">
+              <div id="insights-comics-fill" style="background: var(--neon-blue);"></div>
+              <div id="insights-shipping-split-fill" style="background: var(--neon-pink);"></div>
+            </div>
+          </div>
+          <button type="button" class="insight-card-note insight-card-note-link hidden" id="insights-priciest-sub"></button>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-card-title">Shipping and patterns</div>
+          <div class="insight-card-stats insight-card-stats-2">
+            <div class="insight-stat">
+              <span class="insight-stat-label">Busiest release day</span>
+              <span class="insight-stat-value mono" id="insights-busiest-day">-</span>
+            </div>
+            <div class="insight-stat">
+              <span class="insight-stat-label">Saved by cancelling</span>
+              <span class="insight-stat-value mono" id="insights-cancelled-savings">£0.00</span>
+            </div>
+            <div class="insight-stat insight-stat-right">
+              <span class="insight-stat-label">Shipping vs cover price</span>
+              <span class="insight-stat-value mono" id="insights-shipping-ratio">0%</span>
+            </div>
+          </div>
+          <div class="insight-weekday-chart" id="insights-weekday-chart"></div>
+          <p class="insight-card-note" id="insights-shipping-note"></p>
+        </div>
+      </section>
+      <section class="block">
+        <div class="block-head">
+          <h2>Top 3 most expensive</h2>
+        </div>
+        <ul class="item-list" id="insights-top3">
+          <li class="muted item-list-empty">Nothing tracked yet.</li>
+        </ul>
+      </section>
+      <section class="block hidden" id="insights-price-creep-section">
+        <div class="block-head">
+          <h2>Price creep</h2>
+        </div>
+        <div id="insights-price-creep-list"></div>
+      </section>
+      <section class="block">
+        <div class="block-head">
+          <h2>12-month spend trend</h2>
+        </div>
+        <div id="insights-trend-chart" class="trend-chart-wrap"></div>
+      </section>
+      <section class="block">
+        <div class="block-head">
+          <h2>Spend by shop</h2>
+        </div>
+        <ul class="item-list" id="insights-by-shop">
+          <li class="muted item-list-empty">Nothing tracked yet.</li>
+        </ul>
+      </section>
+    </main>
+
+    <main id="view-settings" class="view hidden">
+      <section class="block">
+        <div class="block-head">
+          <h2>Notifications</h2>
+        </div>
+        <p class="muted item-form-hint">
+          A daily local reminder if anything's releasing tomorrow - no
+          server, no account, scheduled entirely on this device.
+        </p>
+        <label class="checkbox-row">
+          <input type="checkbox" id="settings-notifications-enabled">
+          <span>Remind me about tomorrow's releases</span>
+        </label>
+        <label>
+          <span>Reminder time</span>
+          <input type="time" id="settings-notify-time" value="08:00">
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="settings-notify-quiet-days">
+          <span>Still notify me even when nothing's releasing tomorrow</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="settings-weekly-digest-enabled">
+          <span>Also remind me weekly, alongside the daily one</span>
+        </label>
+        <label>
+          <span>Weekly digest day</span>
+          <select id="settings-weekly-digest-day">
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+            <option value="0">Sunday</option>
+          </select>
+        </label>
+        <button type="button" id="settings-save-notifications-btn">Save</button>
+        <button type="button" id="settings-test-notification-btn" class="btn-tiny">Send test notification now</button>
+        <p class="muted item-form-hint" id="notification-status"></p>
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <h2>Budget</h2>
+        </div>
+        <label>
+          <span>Monthly budget</span>
+          <input type="number" step="0.01" min="0" id="settings-budget" placeholder="e.g. 100.00">
+        </label>
+        <label>
+          <span>Budget cycle</span>
+          <select id="settings-budget-cycle">
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
+            <option value="28day">28-day rolling</option>
+          </select>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="settings-budget-rollover">
+          <span>Roll over unused budget into the next cycle (monthly only)</span>
+        </label>
+        <button type="button" id="settings-save-budget-btn">Save budget</button>
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <h2>General preferences</h2>
+        </div>
+        <label>
+          <span>Currency</span>
+          <select id="settings-currency">
+            <option value="£">£ GBP</option>
+            <option value="$">$ USD</option>
+            <option value="€">€ EUR</option>
+          </select>
+        </label>
+        <label>
+          <span>Default landing page</span>
+          <select id="settings-landing-page">
+            <option value="dashboard">Dashboard</option>
+            <option value="calendar">Calendar</option>
+            <option value="search">Search</option>
+            <option value="log-orders">Log Orders</option>
+          </select>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="settings-auto-backup-enabled">
+          <span>Automatic daily backup (kept alongside the database, last 7 kept)</span>
+        </label>
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <h2>Sync</h2>
+        </div>
+        <p class="muted item-form-hint">
+          Optional - connects this app straight to your own self-hosted
+          Ka-Ching! server so both stay in step. Leave blank to keep using
+          this app fully standalone, same as always.
+        </p>
+        <label>
+          <span>Server URL</span>
+          <input type="text" id="settings-sync-url" placeholder="https://kaching.example.com">
+        </label>
+        <label>
+          <span>Sync key</span>
+          <input type="text" id="settings-sync-key" placeholder="Paste the key from the server's Settings page">
+        </label>
+        <label>
+          <span>Device name (shown on the server)</span>
+          <input type="text" id="settings-sync-label" placeholder="e.g. My phone">
+        </label>
+        <button type="button" id="settings-sync-save-btn" class="btn-tiny">Save</button>
+        <button type="button" id="settings-sync-now-btn">Sync now</button>
+        <button type="button" id="settings-sync-force-full-btn" class="btn-tiny">Force full resync</button>
+        <p class="muted item-form-hint">
+          Only needed if syncing seems stuck, or some items never seem
+          to update - makes the next sync re-check everything instead
+          of just what's changed recently.
+        </p>
+        <p class="muted item-form-hint" id="sync-status"></p>
+        <p class="muted item-form-hint" id="sync-conflicts-line" style="display:none;"></p>
+        <button type="button" id="settings-sync-review-conflicts-btn" class="btn-tiny" style="display:none;">Review conflicts</button>
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <h2>Data</h2>
+        </div>
+        <p class="muted item-form-hint" id="db-stats-line"></p>
+        <p class="muted item-form-hint">
+          CSV is a plain spreadsheet of everything tracked, for opening
+          elsewhere - not something this app can read back in. The JSON
+          backup is the reverse: made for restoring back into this app,
+          not for opening in a spreadsheet.
+        </p>
+        <button type="button" id="settings-export-csv-btn" class="btn-tiny">Export as CSV</button>
+        <button type="button" id="settings-export-json-btn" class="btn-tiny">Export backup (JSON)</button>
+        <p class="muted item-form-hint" id="export-status"></p>
+
+        <div id="dev-tools-section" class="hidden">
+          <button type="button" id="settings-show-shipping-debug-btn" class="btn-tiny" style="margin-top: 16px;">Show Forbidden Planet shipping breakdown</button>
+          <div id="shipping-debug-output" class="hidden" style="margin-top: 10px; font-family: var(--font-mono); font-size: 11px; max-height: 400px; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px;"></div>
+        </div>
+
+        <label>
+          <span>Restore from backup (JSON)</span>
+          <input type="file" id="settings-restore-input" accept="application/json">
+        </label>
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <h2>Danger zone</h2>
+        </div>
+        <p class="muted item-form-hint">
+          Deletes every tracked item on this device. There's no undo for this.
+        </p>
+        <label>
+          <span>Type RESET to confirm</span>
+          <input type="text" id="settings-reset-confirm" placeholder="RESET">
+        </label>
+        <button type="button" id="settings-reset-btn" class="btn-danger">Delete everything</button>
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <h2>About</h2>
+        </div>
+        <p class="muted item-form-hint">
+          Ka-Ching! answers exactly two questions - what's due this week
+          and what it'll cost, and what this month (and next) is forecast
+          to come to. Nothing more: no collection cataloguing, no
+          accounts, no cloud.
+        </p>
+        <p class="mono muted about-meta"><span id="about-version"></span> &middot; <a href="https://github.com/callum87-Lab/Ka-Ching" target="_blank" rel="noopener">View on GitHub</a></p>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav">
+    <button type="button" class="nav-btn active" data-view="dashboard" aria-label="Dashboard" title="Dashboard">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+    </button>
+    <button type="button" class="nav-btn" data-view="calendar" aria-label="Calendar" title="Calendar">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>
+    </button>
+    <button type="button" class="nav-btn nav-btn-center" data-view="log-orders" aria-label="Log Orders" title="Log Orders">
+      <span class="nav-btn-center-icon">&#43;</span>
+      <span class="nav-btn-center-label">Log</span>
+    </button>
+    <button type="button" class="nav-btn" data-view="search" aria-label="Search" title="Search">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    </button>
+    <button type="button" class="nav-btn" data-view="insights" aria-label="Insights" title="Insights">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/></svg>
+    </button>
+  </nav>
+
+  <jeep-sqlite></jeep-sqlite>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

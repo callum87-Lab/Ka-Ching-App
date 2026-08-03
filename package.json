@@ -1,0 +1,26 @@
+{
+  "name": "ka-ching-app",
+  "version": "0.1.0",
+  "description": "Ka-Ching! mobile app - local-only comic pre-order tracker (Stage 1: manual entry)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "sync": "npm run build && cap sync",
+    "test": "node test/logic.test.js"
+  },
+  "dependencies": {
+    "@capacitor-community/sqlite": "^8.1.0",
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/local-notifications": "^8.2.1",
+    "@capacitor/share": "^8.0.1",
+    "jeep-sqlite": "^2.8.0"
+  },
+  "devDependencies": {
+    "vite": "^8.1.5"
+  }
+}
