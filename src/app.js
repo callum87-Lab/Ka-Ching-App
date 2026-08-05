@@ -108,7 +108,14 @@ async function initDatabase() {
   if (isWeb) {
     const jeepEl = document.querySelector('jeep-sqlite');
     await customElements.whenDefined('jeep-sqlite');
-    await jeepEl.initWebStore();
+    // Current jeep-sqlite versions initialize their IndexedDB store
+    // automatically once the element is defined - there's no explicit
+    // init call to make. isStoreOpen() just confirms it's ready; poll
+    // briefly in case the element hasn't finished its own setup yet.
+    for (let attempt = 0; attempt < 50; attempt++) {
+      if (await jeepEl.isStoreOpen()) break;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
   }
 
   db = await sqlite.createConnection(DB_NAME, false, 'no-encryption', 1, false);
