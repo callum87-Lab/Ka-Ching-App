@@ -846,9 +846,13 @@ function stripFpBullet(line) {
  * generic name/price reader. */
 export function looksLikeForbiddenPlanet(text) {
   const t = text || '';
-  if (/Order\s*#\[?\d/.test(t) && /£\s*\d/.test(t)) return true;
+  if (/Order(?:\s+Number)?\s*#\[?\d/.test(t) && /£\s*\d/.test(t)) return true;
   if (/\[Awaiting product image\]/i.test(t)) return true;
   if (/Release date:/i.test(t) && /(Not charged|Fully charged)/i.test(t)) return true;
+  // The plain-text confirmation EMAIL - completely different shape to
+  // either page paste above (no markdown-style [Name](url) links at
+  // all), so it needs its own signal: "Order Ref:" is unique to it.
+  if (/Order Ref:\s*#?\d/i.test(t)) return true;
   return false;
 }
 
@@ -862,6 +866,14 @@ export function looksLikeForbiddenPlanet(text) {
  * indented bullet list under each item rather than bare lines. Returns
  * items shaped for insertItem, with Forbidden Planet as the shop. */
 export function parseForbiddenPlanetOrders(text) {
+  // The confirmation email is a completely different shape (no bracket
+  // links at all) - handled by its own dedicated parser rather than
+  // shoehorned into the line-walker below, which is built entirely
+  // around "[Name](url)"/"[Name]" bracket patterns the email never has.
+  if (/Order Ref:\s*#?\d/i.test(text || '')) {
+    return parseForbiddenPlanetEmail(text);
+  }
+
   const lines = (text || '').split('\n');
   const n = lines.length;
   let i = 0;
@@ -869,7 +881,7 @@ export function parseForbiddenPlanetOrders(text) {
   let currentPlacedDate = null;
   const items = [];
 
-  const orderNumberRe = /^Order\s*#\s*\[?(\d+)\]?/i;
+  const orderNumberRe = /^Order(?:\s+Number)?\s*#\s*\[?(\d+)\]?/i;
   const subscriptionOrderRe = /^Subscription Order\s*#\s*\[?(\d+)\]?/i;
   // Some paste formats split this across two lines entirely - "Order#"
   // on its own, with the bare number on the next line - rather than
@@ -989,10 +1001,17 @@ export function parseForbiddenPlanetOrders(text) {
         }
         const releaseMatch = l.match(/^Release date:\s*(.+)$/i);
         const dispatchLinkMatch = l.match(/^\[Dispatched[^\]]*\]\([^)]*\/dispatch\/(\d+)\/?\)$/i);
+        const shippingEstimateMatch = l.match(/^Shipping in approximately\s+(.+)$/i);
         if (releaseMatch) {
           releaseDate = parseFpDate(releaseMatch[1]);
         } else if (dispatchLinkMatch) {
           dispatchGroup = dispatchLinkMatch[1];
+        } else if (shippingEstimateMatch && dispatchGroup === null) {
+          // The checkout confirmation page has no dispatch links at all
+          // (nothing's shipped yet) - its own "One package with N items
+          // shipping in approximately X" postage summary uses this exact
+          // same wording per parcel, so it doubles as a real grouping key.
+          dispatchGroup = shippingEstimateMatch[1].trim().toLowerCase();
         } else if (/^Not charged/i.test(l)) {
           chargeStatus = 'not_charged';
         } else if (/^Fully charged/i.test(l)) {
@@ -1080,6 +1099,96 @@ export function parseForbiddenPlanetOrders(text) {
   return items;
 }
 
+const FP_EMAIL_REF_RE = /Order Ref:\s*#?(\d+)/i;
+const FP_EMAIL_DATE_RE = /Order Date:\s*(\d{1,2}\s+[A-Za-z]+\s+\d{4})/i;
+const FP_EMAIL_SHIPMENT_HEADING_RE = /Shipment\s+(\d+)/gi;
+const FP_EMAIL_POSTAGE_RE = /Postage\s+£\s*(\d+\.\d{2})/gi;
+
+/** Ports the web app's own confirmation-email parser: a completely
+ * different shape to either page paste above (no "[Name](url)" links at
+ * all - just "N x Title" lines), with its own real per-shipment postage
+ * ("Postage £X.XX" once per "Shipment NN" section) and its own inline
+ * release date per item ("Due for release on D Mon YYYY."). Genuinely
+ * tolerant of the two ways different email clients render it: some keep
+ * real line breaks between an item's title/status/release-date lines,
+ * others collapse them to single spaces - this matches either. */
+export function parseForbiddenPlanetEmail(text) {
+  const t = text || '';
+  const refMatch = t.match(FP_EMAIL_REF_RE);
+  if (!refMatch) return [];
+  const orderNumber = refMatch[1];
+
+  let placedDate = null;
+  const dateMatch = t.match(FP_EMAIL_DATE_RE);
+  if (dateMatch) placedDate = parseFpDate(dateMatch[1]);
+
+  // Split into per-shipment chunks so each item can be tagged with real
+  // shipment membership - the same real-postage linking the order-detail
+  // page gets via dispatch links, keyed off "Shipment NN" here instead.
+  const headings = [...t.matchAll(FP_EMAIL_SHIPMENT_HEADING_RE)];
+  const chunks = headings.length > 0
+    ? headings.map((h, idx) => ({
+        label: h[0],
+        start: h.index,
+        end: idx + 1 < headings.length ? headings[idx + 1].index : t.length,
+      }))
+    : [{ label: null, start: 0, end: t.length }];
+
+  const items = [];
+  for (const chunk of chunks) {
+    const block = t.slice(chunk.start, chunk.end);
+    const itemRe = /^\d+\s*x\s+(.+?)\s+(Dispatched|Pre-?order|Backordered|Processing|Charged)\b[\s\S]*?(?:Due for release on\s+(\d{1,2}\s+[A-Za-z]+\s+\d{4})\.)?\s*£\s*(\d+\.\d{2})/gim;
+    let m;
+    while ((m = itemRe.exec(block)) !== null) {
+      const pageStatus = m[2].toLowerCase();
+      if (pageStatus === 'cancelled') continue;
+      const price = parseFpPrice(m[4]);
+      if (price === null) continue;
+      const status = pageStatus === 'dispatched' ? 'dispatched' : 'preorder';
+      items.push({
+        name: m[1].trim(),
+        price,
+        release_date: m[3] ? parseFpDate(m[3]) : null,
+        shop: 'Forbidden Planet',
+        order_number: orderNumber,
+        placed_date: placedDate,
+        status,
+        charge_status: status === 'dispatched' ? 'charged' : 'not_charged',
+        _fpDispatchGroup: chunk.label,
+      });
+    }
+  }
+
+  // Real, exact per-shipment postage - one "Postage £X.XX" line per
+  // shipment section, same real-figure treatment as the order-detail
+  // page's own per-parcel breakdown.
+  const postageMatches = [...t.matchAll(FP_EMAIL_POSTAGE_RE)];
+  if (postageMatches.length > 0 && items.length > 0) {
+    const itemsByGroup = new Map();
+    for (const item of items) {
+      const key = item._fpDispatchGroup || '';
+      if (!itemsByGroup.has(key)) itemsByGroup.set(key, []);
+      itemsByGroup.get(key).push(item);
+    }
+    const groupKeys = [...itemsByGroup.keys()];
+    if (groupKeys.length === postageMatches.length) {
+      groupKeys.forEach((key, idx) => {
+        const groupItems = itemsByGroup.get(key);
+        const perItem = Math.round((parseFloat(postageMatches[idx][1]) / groupItems.length) * 100) / 100;
+        for (const item of groupItems) item.shipping = perItem;
+      });
+    } else {
+      const total = postageMatches.reduce((sum, m2) => sum + parseFloat(m2[1]), 0);
+      const perItem = Math.round((total / items.length) * 100) / 100;
+      for (const item of items) item.shipping = perItem;
+    }
+  }
+
+  for (const item of items) delete item._fpDispatchGroup;
+
+  return items;
+}
+
 /** A second, independent pass over the same order-history text, looking
  * only for each order's declared "Total" line - kept completely separate
  * from parseForbiddenPlanetOrders above rather than merged into it, so
@@ -1096,7 +1205,7 @@ export function extractFpDeclaredTotals(text) {
   let currentOrder = null;
   const totals = new Map();
 
-  const orderNumberRe = /^Order\s*#\s*\[?(\d+)\]?/i;
+  const orderNumberRe = /^Order(?:\s+Number)?\s*#\s*\[?(\d+)\]?/i;
   const subscriptionOrderRe = /^Subscription Order\s*#\s*\[?(\d+)\]?/i;
   const orderLabelOnlyRe = /^(?:Subscription\s+)?Order\s*#\s*$/i;
   const bareNumberRe = /^\[?(\d+)\]?$/;
@@ -1157,8 +1266,8 @@ export function extractFpDeclaredTotals(text) {
   return totals;
 }
 
-const FP_ORDER_DETAIL_HEADING_RE = /Order\s*#\s*\[?(\d+)\]?/gi;
-const FP_POSTAGE_RE = /Postage:?\s*£(\d+\.\d{2})/i;
+const FP_ORDER_DETAIL_HEADING_RE = /Order(?:\s+Number)?\s*#\s*\[?(\d+)\]?/gi;
+const FP_POSTAGE_RE = /Postage:?\s*£\s*(\d+\.\d{2})/gi;
 const FP_MULTI_SHIPMENT_RE = /One package with \d+ items?[^\d£\n]*?£?\s*(\d+\.\d{2})/gi;
 
 /** Finds the declared postage for each order-detail block in the pasted
@@ -1182,8 +1291,10 @@ function extractFpPostageByOrder(text) {
       postageByOrder.set(orderNumber, { shipments: multiMatches.map(m => parseFloat(m[1])) });
       continue;
     }
-    const postageMatch = block.match(FP_POSTAGE_RE);
-    if (postageMatch) postageByOrder.set(orderNumber, { shipments: [parseFloat(postageMatch[1])] });
+    const postageMatches = [...block.matchAll(FP_POSTAGE_RE)];
+    if (postageMatches.length > 0) {
+      postageByOrder.set(orderNumber, { shipments: postageMatches.map(m => parseFloat(m[1])) });
+    }
   }
   return postageByOrder;
 }

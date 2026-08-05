@@ -1535,6 +1535,130 @@ test('real order-detail page: an order that genuinely shipped in two separate pa
   assert.ok(groupB.every(i => i.shipping === 1));
 });
 
+test('checkout confirmation page ("Order Number#") - real 8-item order across 3 shipments', () => {
+  const text = [
+    'Order Number#[54665762](https://forbiddenplanet.com/orders/54665762/)',
+    'Order Summary', '8 Items£66.58', 'Postage (3 shipments )£13.49', 'Total£80.07', '',
+    '* Shipment 01', 'Expected to ship in approximately 4 weeks',
+    '[Star Wars: The Book Of Boba Fett #1 (Jerry Ordway Variant)](https://forbiddenplanet.com/checkout/complete/)',
+    'Pre-Order (Will ship once we receive stock)',
+    '   * Release date: 2 Sep 2026', '   * Shipping in approximately 4 weeks', '£14.99',
+    '[Star Wars: The Book Of Boba Fett #1 (E.M. Gist Virgin Variant)](https://forbiddenplanet.com/checkout/complete/)',
+    'Pre-Order (Will ship once we receive stock)',
+    '   * Release date: 2 Sep 2026', '   * Shipping in approximately 4 weeks', '£29.99',
+    'Postage£5.99',
+    '* Shipment 02',
+    '[Star Wars: The Fall Of Kylo Ren #3 (Mico Suayan Variant)](https://forbiddenplanet.com/checkout/complete/)',
+    'Pre-Order (Will ship once we receive stock)',
+    '   * Release date: 21 Oct 2026', '   * Shipping in approximately 2 months, 2 weeks', '£3.30',
+    '[Star Wars: The Book Of Boba Fett #3](https://forbiddenplanet.com/checkout/complete/)',
+    'Pre-Order (Will ship once we receive stock)',
+    '   * Release date: 14 Oct 2026', '   * Shipping in approximately 2 months, 2 weeks', '£3.75',
+    'Postage£4.00',
+    '* Shipment 03',
+    '[Star Wars: The Book Of Boba Fett #4](https://forbiddenplanet.com/checkout/complete/)',
+    'Pre-Order (Will ship once we receive stock)',
+    '   * Release date: 28 Oct 2026', '   * Shipping in approximately 2 months, 3 weeks', '£3.75',
+    'Postage£3.50',
+  ].join('\n');
+  assert.equal(looksLikeForbiddenPlanet(text), true);
+  const items = parseForbiddenPlanetOrders(text);
+  assert.equal(items.length, 5);
+  assert.equal(items[0].name, 'Star Wars: The Book Of Boba Fett #1 (Jerry Ordway Variant)');
+  assert.equal(items[0].order_number, '54665762');
+  assert.equal(items[0].release_date, '2026-09-02');
+  assert.equal(items[3].name, 'Star Wars: The Book Of Boba Fett #3');
+  assert.equal(items[3].release_date, '2026-10-14');
+  // Real per-shipment postage, matched via the "Shipping in approximately
+  // X" text each item states - not just an even split across the order.
+  assert.equal(items[0].shipping, 3);
+  assert.equal(items[1].shipping, 3);
+  assert.equal(items[2].shipping, 2);
+  assert.equal(items[3].shipping, 2);
+  assert.equal(items[4].shipping, 3.5);
+});
+
+test('checkout confirmation page - a placeholder-image item mixed in still resolves the real title', () => {
+  const text = [
+    'Order Number#[54665762](https://forbiddenplanet.com/orders/54665762/)',
+    '[Awaiting product image]',
+    'Star Wars: The Fall Of Kylo Ren #3 (Mico Suayan Variant)',
+    'Pre-Order (Will ship once we receive stock)',
+    '   * Release date: 21 Oct 2026', '£3.30',
+  ].join('\n');
+  const items = parseForbiddenPlanetOrders(text);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].name, 'Star Wars: The Fall Of Kylo Ren #3 (Mico Suayan Variant)');
+});
+
+test('confirmation email - real 3-shipment order, standard line breaks', () => {
+  const text = [
+    'Thanks for Your Order!', 'Order Ref:', '#54665762', 'Order Date:', '04 August 2026',
+    'Shipment 01', 'The following items are expected to ship in approximately 4 weeks',
+    '1 x Star Wars: The Book Of Boba Fett #1 (Jerry Ordway Variant)',
+    'Pre-Order (Will ship once we receive stock)', 'Due for release on 2 Sep 2026.', '£14.99',
+    '1 x Star Wars: The Book Of Boba Fett #1 (E.M. Gist Virgin Variant)',
+    'Pre-Order (Will ship once we receive stock)', 'Due for release on 2 Sep 2026.', '£29.99',
+    'Postage', '£5.99',
+    'Shipment 02',
+    '1 x Star Wars: The Fall Of Kylo Ren #3 (Mico Suayan Variant)',
+    'Pre-Order (Will ship once we receive stock)', 'Due for release on 21 Oct 2026.', '£3.30',
+    'Postage', '£4.00',
+    'Order Summary', '3 items', '£48.28', 'Postage (2 shipments )', '£9.99', 'Total', '£58.27',
+  ].join('\n');
+  assert.equal(looksLikeForbiddenPlanet(text), true);
+  const items = parseForbiddenPlanetOrders(text);
+  assert.equal(items.length, 3);
+  assert.equal(items[0].name, 'Star Wars: The Book Of Boba Fett #1 (Jerry Ordway Variant)');
+  assert.equal(items[0].price, 14.99);
+  assert.equal(items[0].release_date, '2026-09-02');
+  assert.equal(items[0].order_number, '54665762');
+  assert.equal(items[0].placed_date, '2026-08-04');
+  assert.equal(items[2].name, 'Star Wars: The Fall Of Kylo Ren #3 (Mico Suayan Variant)');
+  assert.equal(items[2].release_date, '2026-10-21');
+  // Real per-shipment postage split across each shipment's own items.
+  assert.equal(items[0].shipping, 3);
+  assert.equal(items[1].shipping, 3);
+  assert.equal(items[2].shipping, 4);
+});
+
+test('confirmation email - real order, but with internal line breaks collapsed to spaces (some email clients do this on copy)', () => {
+  const text = [
+    'Thanks for Your Order!',
+    'Order Ref: #54665762 Order Date: 04 August 2026 Delivery Address:',
+    'Shipment 01 The following items are expected to ship in approximately 4 weeks',
+    '1 x Star Wars: The Book Of Boba Fett #1 (Jerry Ordway Variant) Pre-Order (Will ship once we receive stock) Due for release on 2 Sep 2026.',
+    '£14.99',
+    '1 x Star Wars: The Book Of Boba Fett #1 (E.M. Gist Virgin Variant) Pre-Order (Will ship once we receive stock) Due for release on 2 Sep 2026.',
+    '£29.99',
+    'Postage £5.99',
+    'Shipment 02',
+    '1 x Star Wars: The Fall Of Kylo Ren #3 (Mico Suayan Variant) Pre-Order (Will ship once we receive stock) Due for release on 21 Oct 2026.',
+    '£3.30',
+    'Postage £4.00',
+  ].join('\n');
+  assert.equal(looksLikeForbiddenPlanet(text), true);
+  const items = parseForbiddenPlanetOrders(text);
+  assert.equal(items.length, 3);
+  assert.equal(items[0].name, 'Star Wars: The Book Of Boba Fett #1 (Jerry Ordway Variant)');
+  assert.equal(items[0].price, 14.99);
+  assert.equal(items[0].release_date, '2026-09-02');
+  assert.equal(items[2].name, 'Star Wars: The Fall Of Kylo Ren #3 (Mico Suayan Variant)');
+  assert.equal(items[2].price, 3.3);
+  assert.equal(items[2].release_date, '2026-10-21');
+});
+
+test('confirmation email - a cancelled item is skipped', () => {
+  const text = [
+    'Order Ref:', '#11111', 'Order Date:', '01 January 2026',
+    '1 x Some Comic #1', 'Cancelled', '£3.99',
+    '1 x Some Comic #2', 'Pre-Order (Will ship once we receive stock)', 'Due for release on 5 Jan 2026.', '£3.99',
+  ].join('\n');
+  const items = parseForbiddenPlanetOrders(text);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].name, 'Some Comic #2');
+});
+
 console.log('looksLikeEbay');
 test('detects a real eBay order page', () => {
   const text = ['Order info', 'Order number', '25-14854-15851', 'Item number: 365660456970'].join('\n');
