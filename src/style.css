@@ -154,7 +154,16 @@ html, body {
   font-size: 15px;
   color: var(--text-muted);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+.block-icon {
+  flex: 0 0 auto;
+  color: var(--neon-blue);
+  opacity: 0.85;
+}
+.block-icon svg { display: block; width: 16px; height: 16px; }
 
 form label {
   display: flex;
@@ -343,7 +352,55 @@ input[type="file"] {
 .checkbox-row {
   flex-direction: row !important;
   align-items: center;
-  gap: 8px !important;
+  gap: 10px !important;
+}
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 21px;
+  flex: 0 0 auto;
+}
+.toggle input[type="checkbox"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--surface-raised, var(--bg-2));
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.toggle-track::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.toggle input:checked ~ .toggle-track {
+  background: rgba(47, 216, 255, 0.15);
+  border-color: var(--neon-blue);
+}
+.toggle input:checked ~ .toggle-track::before {
+  transform: translateX(17px);
+  background: var(--neon-blue);
+}
+.toggle input:focus-visible ~ .toggle-track {
+  box-shadow: 0 0 0 2px var(--bg-1), 0 0 0 4px var(--neon-blue);
 }
 
 .item-form-hint { margin: 8px 0 0; font-size: 13px; }
