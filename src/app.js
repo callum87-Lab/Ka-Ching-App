@@ -1934,6 +1934,61 @@ async function scheduleWeeklyNotification(enabled, weekday, time) {
   });
 }
 
+/** Fires once when this month's spend crosses 80% of the monthly budget -
+ * a fixed threshold, not user-editable, matching the same "one sensible
+ * default beats a slider nobody tunes" reasoning as the web app. Since
+ * there's no persistent background process here (this only runs while
+ * the app itself is open), it's checked after every data change rather
+ * than on a fixed schedule - realistically similar in practice, since
+ * spend only changes when the app's actually being used to log something.
+ * Sends at most once per calendar month, tracked via a hidden setting,
+ * so it doesn't repeat every time refreshAll() runs for the rest of the
+ * month once crossed. force=true (the manual test button) bypasses both
+ * the enabled check and the once-per-month gate. */
+async function checkBudgetAlert(items, force = false) {
+  const enabled = (await getSetting('budget_alert_enabled', 'no')) === 'yes';
+  if (!enabled && !force) return null;
+  if (!monthlyBudget || monthlyBudget <= 0) {
+    return force ? { sent: false, reason: 'No monthly budget is set in Settings.' } : null;
+  }
+
+  const now = new Date();
+  const spend = computeMonthSpend(items, now.getFullYear(), now.getMonth());
+  const pct = Math.round((spend / monthlyBudget) * 100);
+  const periodKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const lastAlerted = await getSetting('budget_alert_last_period', '');
+  const alreadySentThisPeriod = lastAlerted === periodKey;
+
+  if (pct < 80 && !force) return null;
+  if (alreadySentThisPeriod && !force) return null;
+
+  let title = `Budget alert: ${pct}% of this month's budget`;
+  let body = `${formatCurrency(spend, currencySymbol)} of ${formatCurrency(monthlyBudget, currencySymbol)} spent so far this month.`;
+  if (force && pct < 80) {
+    body += ' (Not yet at the 80% threshold - this is a test send.)';
+  }
+
+  if (!(window.Capacitor && window.Capacitor.isNativePlatform())) {
+    return { sent: false, reason: 'Notifications only work on-device, not in this browser preview.' };
+  }
+
+  try {
+    const permission = await LocalNotifications.requestPermissions();
+    if (permission.display !== 'granted') {
+      return { sent: false, reason: 'Notification permission not granted.' };
+    }
+    await LocalNotifications.schedule({
+      notifications: [{ id: 4, title, body, schedule: { at: new Date(Date.now() + 1000) } }],
+    });
+    if (pct >= 80) {
+      await setSetting('budget_alert_last_period', periodKey);
+    }
+    return { sent: true };
+  } catch (err) {
+    return { sent: false, reason: err.message || String(err) };
+  }
+}
+
 async function refreshAll() {
   allItemsCache = await fetchAllItems();
   renderDashboard(allItemsCache);
@@ -1943,6 +1998,7 @@ async function refreshAll() {
   renderInsights(allItemsCache);
   document.getElementById('db-stats-line').textContent =
     `${allItemsCache.length} item${allItemsCache.length !== 1 ? 's' : ''} tracked on this device.`;
+  checkBudgetAlert(allItemsCache).catch(err => console.error('Budget alert check failed:', err));
 }
 
 function switchView(viewName) {
@@ -2217,6 +2273,8 @@ async function main() {
   document.getElementById('settings-budget-cycle').value = budgetCycle;
   budgetRollover = (await getSetting('budget_rollover', 'no')) === 'yes';
   document.getElementById('settings-budget-rollover').checked = budgetRollover;
+  document.getElementById('settings-budget-alert-enabled').checked =
+    (await getSetting('budget_alert_enabled', 'no')) === 'yes';
 
   try {
     const storedDismissed = await getSetting('dismissed_duplicates', '[]');
@@ -2857,7 +2915,23 @@ async function main() {
     await setSetting('budget_cycle', budgetCycle);
     budgetRollover = document.getElementById('settings-budget-rollover').checked;
     await setSetting('budget_rollover', budgetRollover ? 'yes' : 'no');
+    await setSetting('budget_alert_enabled', document.getElementById('settings-budget-alert-enabled').checked ? 'yes' : 'no');
     await refreshAll();
+  });
+
+  document.getElementById('settings-test-budget-alert-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('settings-test-budget-alert-btn');
+    const original = btn.textContent;
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+    try {
+      const result = await checkBudgetAlert(allItemsCache, true);
+      btn.textContent = result && result.sent ? 'Sent!' : (result && result.reason) || 'Failed';
+    } catch (err) {
+      btn.textContent = err.message || 'Failed';
+    } finally {
+      setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 2500);
+    }
   });
 
   document.getElementById('settings-landing-page').addEventListener('change', async (e) => {

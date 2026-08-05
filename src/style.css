@@ -353,6 +353,7 @@ input[type="file"] {
   flex-direction: row !important;
   align-items: center;
   gap: 10px !important;
+  margin-bottom: 16px !important;
 }
 
 .toggle {
