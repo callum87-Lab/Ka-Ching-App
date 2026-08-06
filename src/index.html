@@ -224,7 +224,10 @@
           <button type="button" id="add-row-btn" class="btn-add-row">+ Add another comic</button>
 
           <label class="checkbox-row">
-            <input type="checkbox" id="field-already-paid">
+            <span class="toggle">
+              <input type="checkbox" id="field-already-paid">
+              <span class="toggle-track"></span>
+            </span>
             <span>Already paid (applies to all rows above)</span>
           </label>
           <button type="submit">Add item(s)</button>
@@ -312,7 +315,7 @@
 
       <section class="block">
         <div class="block-head">
-          <h2>Search</h2>
+          <h2><span class="block-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Search</h2>
         </div>
         <label>
           <span>Name, shop, or order #</span>
@@ -347,7 +350,10 @@
             <input type="date" id="search-end-date">
           </label>
           <label class="checkbox-row">
-            <input type="checkbox" id="search-include-undated" checked>
+            <span class="toggle">
+              <input type="checkbox" id="search-include-undated" checked>
+              <span class="toggle-track"></span>
+            </span>
             <span>Include items with no date</span>
           </label>
           <label>

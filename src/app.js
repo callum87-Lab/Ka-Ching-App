@@ -789,7 +789,10 @@ function openEditModal(item, onSaved) {
           <input type="text" id="edit-field-tracking-number" value="${item.tracking_number ? escapeHtml(item.tracking_number) : ''}" placeholder="e.g. NP678811691GB">
         </label>
         <label class="checkbox-row">
-          <input type="checkbox" id="edit-field-already-paid" ${item.charge_status === 'charged' ? 'checked' : ''}>
+          <span class="toggle">
+            <input type="checkbox" id="edit-field-already-paid" ${item.charge_status === 'charged' ? 'checked' : ''}>
+            <span class="toggle-track"></span>
+          </span>
           <span>Already paid</span>
         </label>
         <button type="submit">Save changes</button>
@@ -2061,7 +2064,10 @@ function importReviewRowHtml(r, i) {
   return `
     <div class="preview-row" data-preview-index="${i}">
       <label class="preview-keep">
-        <input type="checkbox" data-preview-field="keep" data-preview-index="${i}" checked>
+        <span class="toggle">
+          <input type="checkbox" data-preview-field="keep" data-preview-index="${i}" checked>
+          <span class="toggle-track"></span>
+        </span>
       </label>
       <input type="text" data-preview-field="name" data-preview-index="${i}" value="${escapeHtml(r.name)}" class="preview-name-input">
       <input type="number" step="0.01" data-preview-field="price" data-preview-index="${i}" value="${r.price}" class="preview-price-input">

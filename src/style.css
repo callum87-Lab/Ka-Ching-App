@@ -995,19 +995,19 @@ input[type="file"] {
   margin: 10px 0;
 }
 .date-preset-btn {
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
+  background: transparent;
+  border: 1px solid var(--border-strong);
   color: var(--text-muted);
   font-family: var(--font-body);
   font-size: 12.5px;
   padding: 7px 12px;
-  border-radius: var(--radius);
+  border-radius: 999px;
 }
 @media (hover: hover) {
   .date-preset-btn:hover { border-color: var(--neon-blue); color: var(--text); }
 }
 .date-preset-btn:focus { outline: none; }
-.date-preset-btn.active { background: var(--neon-blue); color: #04121a; border-color: var(--neon-blue); font-weight: 700; }
+.date-preset-btn.active { background: rgba(47, 216, 255, 0.12); color: var(--neon-blue); border-color: var(--neon-blue); font-weight: 700; }
 .date-preset-btn-clear { color: var(--neon-blue); border-color: var(--neon-blue); }
 
 #search-totals-row {
