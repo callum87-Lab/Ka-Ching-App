@@ -764,7 +764,7 @@ function openEditModal(item, onSaved) {
   backdrop.innerHTML = `
     <div class="edit-modal">
       <div class="edit-modal-head">
-        <h2>Edit item</h2>
+        <h2><span class="block-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>Edit item</h2>
         <button type="button" class="edit-modal-close" aria-label="Close">&times;</button>
       </div>
       <form id="edit-item-form">
@@ -850,7 +850,7 @@ function openOrderOverviewModal(orderNumber) {
   backdrop.innerHTML = `
     <div class="edit-modal">
       <div class="edit-modal-head">
-        <h2>Order #${escapeHtml(orderNumber)}</h2>
+        <h2><span class="block-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>Order #${escapeHtml(orderNumber)}</h2>
         <button type="button" class="edit-modal-close" aria-label="Close">&times;</button>
       </div>
       <ul class="item-list" id="order-overview-list">${renderOrderOverviewRows(orderNumber)}</ul>
@@ -927,7 +927,7 @@ async function openConflictsModal() {
   backdrop.innerHTML = `
     <div class="edit-modal">
       <div class="edit-modal-head">
-        <h2>Sync conflicts</h2>
+        <h2><span class="block-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg></span>Sync conflicts</h2>
         <button type="button" class="edit-modal-close" aria-label="Close">&times;</button>
       </div>
       <p class="muted item-form-hint">
@@ -2100,7 +2100,7 @@ function openImportReviewModal() {
   backdrop.innerHTML = `
     <div class="edit-modal">
       <div class="edit-modal-head">
-        <h2>Review before adding</h2>
+        <h2><span class="block-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span>Review before adding</h2>
         <button type="button" class="edit-modal-close" aria-label="Close">&times;</button>
       </div>
       <p class="muted item-form-hint">

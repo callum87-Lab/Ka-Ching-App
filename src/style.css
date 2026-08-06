@@ -677,6 +677,7 @@ input[type="file"] {
   justify-content: space-between;
   margin-bottom: 10px;
 }
+.edit-modal-head h2 { display: flex; align-items: center; gap: 8px; }
 .edit-modal-close {
   background: none;
   border: none;
