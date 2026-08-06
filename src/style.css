@@ -1103,7 +1103,7 @@ input[type="file"] {
   justify-content: center;
   background: var(--surface-raised);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 11px;
   cursor: pointer;
 }
