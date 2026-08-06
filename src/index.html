@@ -565,8 +565,10 @@
             <option value="0">Sunday</option>
           </select>
         </label>
-        <button type="button" id="settings-save-notifications-btn">Save</button>
-        <button type="button" id="settings-test-notification-btn" class="btn-tiny">Send test notification now</button>
+        <div class="btn-row">
+          <button type="button" id="settings-save-notifications-btn" class="btn-tiny-fill">Save</button>
+          <button type="button" id="settings-test-notification-btn" class="btn-tiny">Send test notification now</button>
+        </div>
         <p class="muted item-form-hint" id="notification-status"></p>
       </section>
 
@@ -600,8 +602,10 @@
           </span>
           <span>Also notify when I cross 80% of this month's budget</span>
         </label>
-        <button type="button" id="settings-save-budget-btn">Save budget</button>
-        <button type="button" id="settings-test-budget-alert-btn" class="btn-tiny">Test budget alert now</button>
+        <div class="btn-row">
+          <button type="button" id="settings-save-budget-btn" class="btn-tiny-fill">Save budget</button>
+          <button type="button" id="settings-test-budget-alert-btn" class="btn-tiny">Test budget alert now</button>
+        </div>
       </section>
 
       <section class="block">
@@ -655,9 +659,11 @@
           <span>Device name (shown on the server)</span>
           <input type="text" id="settings-sync-label" placeholder="e.g. My phone">
         </label>
-        <button type="button" id="settings-sync-save-btn" class="btn-tiny">Save</button>
-        <button type="button" id="settings-sync-now-btn">Sync now</button>
-        <button type="button" id="settings-sync-force-full-btn" class="btn-tiny">Force full resync</button>
+        <div class="btn-row">
+          <button type="button" id="settings-sync-save-btn" class="btn-tiny">Save</button>
+          <button type="button" id="settings-sync-now-btn" class="btn-tiny-fill">Sync now</button>
+          <button type="button" id="settings-sync-force-full-btn" class="btn-tiny">Force full resync</button>
+        </div>
         <p class="muted item-form-hint">
           Only needed if syncing seems stuck, or some items never seem
           to update - makes the next sync re-check everything instead
@@ -679,8 +685,10 @@
           backup is the reverse: made for restoring back into this app,
           not for opening in a spreadsheet.
         </p>
-        <button type="button" id="settings-export-csv-btn" class="btn-tiny">Export as CSV</button>
-        <button type="button" id="settings-export-json-btn" class="btn-tiny">Export backup (JSON)</button>
+        <div class="btn-row">
+          <button type="button" id="settings-export-csv-btn" class="btn-tiny">Export as CSV</button>
+          <button type="button" id="settings-export-json-btn" class="btn-tiny">Export backup (JSON)</button>
+        </div>
         <p class="muted item-form-hint" id="export-status"></p>
 
         <div id="dev-tools-section" class="hidden">

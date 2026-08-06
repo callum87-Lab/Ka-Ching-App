@@ -259,12 +259,36 @@ button {
 button:active { background: var(--neon-blue-dim); }
 
 #add-item-form button[type="submit"],
-#paste-parse-btn,
-#settings-save-budget-btn,
-#settings-save-notifications-btn {
+#paste-parse-btn {
   width: 100%;
   padding: 12px;
   font-size: 15px;
+}
+
+/* Same footprint as .btn-tiny (same padding/font-size/radius) but
+ * filled instead of outlined, so a "Save" sits directly beside its
+ * "Test X now" sibling as a matched pair rather than one being a
+ * full-width bar and the other a small pill. */
+.btn-tiny-fill {
+  background: var(--neon-blue);
+  color: #04121a;
+  border: 1px solid var(--neon-blue);
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  border-radius: var(--radius);
+}
+@media (hover: hover) {
+  .btn-tiny-fill:hover { box-shadow: 0 0 8px rgba(47, 216, 255, 0.55); }
+}
+.btn-tiny-fill:active { background: var(--neon-blue-dim); }
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 /* Smaller, bordered, secondary-style buttons - matches the web app's own
