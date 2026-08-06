@@ -1248,19 +1248,17 @@ input[type="file"] {
 }
 .tab-btn {
   flex: 1;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
   color: var(--text-muted);
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 10px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 9px 10px;
   cursor: pointer;
 }
-.tab-btn.active { color: #04121a; background: var(--neon-blue); border-color: var(--neon-blue); }
+.tab-btn.active { color: var(--neon-blue); background: rgba(47, 216, 255, 0.12); border-color: var(--neon-blue); }
 .tab-btn[style*="--shop-color"].active { color: var(--shop-color); background: none; border-color: var(--shop-color); }
 .tab-shop-dot {
   display: inline-block;

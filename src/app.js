@@ -1217,7 +1217,7 @@ function renderGhostItems(allItems) {
     return;
   }
   section.classList.remove('hidden');
-  document.getElementById('ghost-items-count').textContent = `\u26a0 Items with no order number (${ghosts.length})`;
+  document.getElementById('ghost-items-count').textContent = `Items with no order number (${ghosts.length})`;
   document.getElementById('ghost-items-list').innerHTML =
     ghosts.map(item => itemRowHtml(item, { showBulkSelect: true })).join('');
   const removeAllBtn = document.getElementById('ghost-items-remove-all-btn');
@@ -1248,7 +1248,7 @@ function renderAwaitingCharge(allItems) {
     return;
   }
   section.classList.remove('hidden');
-  document.getElementById('awaiting-charge-count').textContent = `⏰ Awaiting charge (${overdue.length})`;
+  document.getElementById('awaiting-charge-count').textContent = `Awaiting charge (${overdue.length})`;
   document.getElementById('awaiting-charge-list').innerHTML =
     overdue.map(item => itemRowHtml(item, { daysLate: item.days_late, showBulkSelect: true })).join('');
 }
@@ -1407,7 +1407,7 @@ function renderDashboard(allItems) {
   renderRecentlyCancelled(allItems);
 
   const yearStats = computeYearStats(items, now.getFullYear());
-  document.getElementById('year-stats-label').textContent = `${now.getFullYear()} so far`;
+  document.getElementById('year-stats-label-text').textContent = `${now.getFullYear()} so far`;
   document.getElementById('year-stats-line').textContent =
     `${formatCurrency(yearStats.year.spent, currencySymbol)} spent · ${formatCurrency(yearStats.year.total, currencySymbol)} tracked total across ${yearStats.year.count} item${yearStats.year.count !== 1 ? 's' : ''} this year.`;
   document.getElementById('all-time-stats-line').textContent =
