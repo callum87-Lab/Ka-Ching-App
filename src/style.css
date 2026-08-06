@@ -437,13 +437,14 @@ input[type="file"] {
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--neon-green);
-  border: 1px solid rgba(60, 242, 166, 0.4);
-  border-radius: 4px;
-  padding: 4px 9px;
+  background: rgba(60, 242, 166, 0.12);
+  border: none;
+  border-radius: 999px;
+  padding: 5px 12px;
   margin: 8px 0;
 }
 .preview-meta-tag.hidden { display: none; }
-.preview-meta-tag-generic { color: var(--neon-pink); border-color: rgba(255, 77, 141, 0.4); }
+.preview-meta-tag-generic { color: var(--neon-pink); background: rgba(255, 77, 141, 0.12); }
 .item-form-hint.success { color: var(--neon-green); }
 
 .item-list {
