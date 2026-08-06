@@ -165,7 +165,7 @@ html, body {
 }
 .block-icon svg { display: block; width: 16px; height: 16px; }
 
-form label {
+label {
   display: flex;
   flex-direction: column;
   gap: 4px;
