@@ -2326,7 +2326,7 @@ async function main() {
     : '';
   await updateConflictBanner();
 
-  document.getElementById('about-version').textContent = 'Ka-Ching! App v1.2.1';
+  document.getElementById('about-version').textContent = 'Ka-Ching! App v1.2.2';
 
   const devToolsUnlocked = await getSetting('dev_tools_unlocked', false);
   if (devToolsUnlocked) {

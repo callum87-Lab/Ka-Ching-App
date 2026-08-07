@@ -854,6 +854,12 @@ function stripFpBullet(line) {
  * generic name/price reader. */
 export function looksLikeForbiddenPlanet(text) {
   const t = text || '';
+  // Whatnot's confirmation email happens to share the same generic
+  // "Order #NNNNN ... £X.XX" shape as a Forbidden Planet order-detail
+  // page, and this check runs first in the dispatch chain - without
+  // this guard, a genuine Whatnot email gets misclaimed here before
+  // its own dedicated parser ever gets a chance to run.
+  if (/purchase from\s+\S+\s+on Whatnot/i.test(t)) return false;
   if (/Order(?:\s+Number)?\s*#\[?\d/.test(t) && /£\s*\d/.test(t)) return true;
   if (/\[Awaiting product image\]/i.test(t)) return true;
   if (/Release date:/i.test(t) && /(Not charged|Fully charged)/i.test(t)) return true;
@@ -1474,7 +1480,7 @@ export function parseEbayOrders(text) {
 const WHATNOT_SELLER_RE = /purchase from\s+(\S+)\s+on Whatnot/i;
 const WHATNOT_ORDER_NUM_RE = /Order\s*#\s*(\d+)/;
 const WHATNOT_SUBTOTAL_RE = /Subtotal\s*\n?\s*£\s*(\d+\.\d{2})/;
-const WHATNOT_SHIPPING_RE = /Shipping\s*\n\s*£\s*(\d+\.\d{2})/;
+const WHATNOT_SHIPPING_RE = /Shipping\s+£\s*(\d+\.\d{2})/;
 const WHATNOT_PAID_RE = /Payment Method/i;
 
 export function looksLikeWhatnot(text) {

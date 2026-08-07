@@ -1883,6 +1883,35 @@ test('real Whatnot confirmation email - item, price, order number, shipping, and
   assert.equal(items[0].release_date, null);
 });
 
+test('real Whatnot email as actually copied from a phone - no markdown # headings, Subtotal/Shipping/Total tab-separated on one line rather than two, and never misdetected as Forbidden Planet despite sharing its "Order #NNNN ... £X.XX" shape', () => {
+  const text = [
+    'Thanks for your purchase from clearance_sales on Whatnot!',
+    "Thanks for your order! The seller should ship your order within 3 business days, and we'll email you a tracking number as soon as it's available.",
+    'In the meantime, check the status of the order by clicking the link(s) below.',
+    'Order Details',
+    '\t',
+    'Funko POP! Comic Covers Star Wars Boba Fett #04 Vinyl Figure Collectible',
+    'Order #1243803335',
+    'Order Total: £15.27',
+    'View Order',
+    'Subtotal\t£12.00',
+    'Tax (Included)\t£0.00',
+    'Shipping\t£3.27',
+    'Total\t£15.27',
+    'Customer Information',
+    'Shipping Address', 'Callum Draper', '12 Hovenden Gardens', 'Nottingham, Nottingham NG7 5FZ', 'GB',
+    'Billing Address', 'Callum Draper', '12 Hovenden Gardens', 'Nottingham, Nottingham NG7 5FZ', 'GB',
+    'Payment Method', 'Paypal - callumsaintclair87@protonmail.com',
+  ].join('\n');
+  assert.equal(looksLikeForbiddenPlanet(text), false);
+  assert.equal(looksLikeWhatnot(text), true);
+  const items = parseWhatnotOrders(text);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].name, 'Funko POP! Comic Covers Star Wars Boba Fett #04 Vinyl Figure Collectible');
+  assert.equal(items[0].price, 12.00);
+  assert.equal(items[0].shipping, 3.27);
+});
+
 test('text with no "Order Details" section or seller line is not mistaken for Whatnot', () => {
   const text = 'Order #12345\nSome random item\n£9.99\nShipping\n£2.00';
   assert.equal(looksLikeWhatnot(text), false);
