@@ -1452,6 +1452,78 @@ export function parseEbayOrders(text) {
   return chunks.flatMap(chunk => parseEbayOrder(chunk, chunks.length === 1));
 }
 
+// --- Whatnot order confirmation email parser ---------------------------
+//
+// Only verified against a single real confirmation email so far (one
+// item per order) - Whatnot may send multi-item orders too, but without
+// a sample to go on this doesn't guess at that shape; a second item
+// block under "### Order Details" would just be missed rather than
+// misparsed, same caution the rest of this file takes elsewhere.
+// Whatnot charges at checkout (unlike Forbidden Planet's pre-orders,
+// charged later at release), so items default to already paid; there's
+// no release-date concept here, just "not yet shipped".
+
+const WHATNOT_SELLER_RE = /purchase from\s+(\S+)\s+on Whatnot/i;
+const WHATNOT_ORDER_NUM_RE = /Order\s*#\s*(\d+)/;
+const WHATNOT_SUBTOTAL_RE = /Subtotal\s*\n?\s*£\s*(\d+\.\d{2})/;
+const WHATNOT_SHIPPING_RE = /Shipping\s*\n\s*£\s*(\d+\.\d{2})/;
+const WHATNOT_PAID_RE = /Payment Method/i;
+
+export function looksLikeWhatnot(text) {
+  const t = text || '';
+  return WHATNOT_SELLER_RE.test(t) && WHATNOT_ORDER_NUM_RE.test(t);
+}
+
+/** Returns a flat item list matching parseEbayOrders' shape, so the
+ * paste-import dispatch in app.js can treat it identically. */
+export function parseWhatnotOrders(text) {
+  const t = text || '';
+  const orderMatch = t.match(WHATNOT_ORDER_NUM_RE);
+  const orderNumber = orderMatch ? orderMatch[1] : null;
+
+  const sellerMatch = t.match(WHATNOT_SELLER_RE);
+  const shop = sellerMatch ? `Whatnot - ${sellerMatch[1]}` : 'Whatnot';
+
+  const subtotalMatch = t.match(WHATNOT_SUBTOTAL_RE);
+  const itemPrice = subtotalMatch ? parseFloat(subtotalMatch[1]) : null;
+
+  const shippingMatch = t.match(WHATNOT_SHIPPING_RE);
+  const shipping = shippingMatch ? parseFloat(shippingMatch[1]) : null;
+
+  const chargeStatus = WHATNOT_PAID_RE.test(t) ? 'charged' : 'not_charged';
+
+  // The item name is the line right after "### Order Details" - the
+  // only line of real prose in that section, everything else below it
+  // is a labelled field (Order #, Order Total, View Order).
+  const idx = t.indexOf('Order Details');
+  if (idx === -1 || !orderNumber || itemPrice === null) return [];
+
+  const lines = t.slice(idx).split('\n');
+  let name = null;
+  for (const rawLine of lines) {
+    const line = rawLine.trim().replace(/^#+\s*/, '');
+    if (!line || line === 'Order Details') continue;
+    if (line.startsWith('Order #') || line.startsWith('Order Total')) break;
+    name = line;
+    break;
+  }
+  if (!name) return [];
+
+  const item = {
+    name,
+    price: itemPrice,
+    release_date: null,
+    shop,
+    order_number: orderNumber,
+    placed_date: null,
+    status: 'preorder',
+    charge_status: chargeStatus,
+    tracking_number: null,
+  };
+  if (shipping !== null) item.shipping = shipping;
+  return [item];
+}
+
 // --- Generic order confirmation parser ("Shopify-style") --------------------
 //
 // For anything that isn't Forbidden Planet or eBay. Built around patterns

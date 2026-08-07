@@ -6,6 +6,7 @@ import {
   topExpensiveItems, groupSpendByShop, buildCalendarGrid, computeMonthSpend, computeMonthSpendWithFallback,
   computeBudgetProgress, parseGenericOrder, computePreorderVsReleased,
   looksLikeForbiddenPlanet, parseForbiddenPlanetOrders, looksLikeEbay, parseEbayOrders,
+  looksLikeWhatnot, parseWhatnotOrders,
   computeCancelledSavings, findMostExpensiveMonth, findBusiestWeekday,
   computeShippingStats, sortItemsBy, SORT_OPTIONS, computeCycleBounds,
   computeCycleSpend, buildCsvExport, buildJsonBackup, parseJsonBackup,
@@ -2324,7 +2325,7 @@ async function main() {
     : '';
   await updateConflictBanner();
 
-  document.getElementById('about-version').textContent = 'Ka-Ching! App v2026.07.31.1';
+  document.getElementById('about-version').textContent = 'Ka-Ching! App v1.2.0';
 
   const devToolsUnlocked = await getSetting('dev_tools_unlocked', false);
   if (devToolsUnlocked) {
@@ -2527,6 +2528,7 @@ async function main() {
 
     const useForbiddenPlanet = forcedShopHint === 'forbidden_planet' || (!forcedShopHint && looksLikeForbiddenPlanet(text));
     const useEbay = !useForbiddenPlanet && (forcedShopHint === 'ebay' || (!forcedShopHint && looksLikeEbay(text)));
+    const useWhatnot = !useForbiddenPlanet && !useEbay && (forcedShopHint === 'whatnot' || (!forcedShopHint && looksLikeWhatnot(text)));
     if (useForbiddenPlanet) {
       pastedResults = parseForbiddenPlanetOrders(text);
       pastedDeclaredTotals = extractFpDeclaredTotals(text);
@@ -2544,6 +2546,15 @@ async function main() {
         detectedLabel.classList.remove('hidden');
       } else {
         notFoundHint.textContent = 'Looked like eBay, but no items were found - non-GBP orders are skipped for now, and the paste needs the "Item details" section included.';
+        notFoundHint.classList.remove('hidden');
+      }
+    } else if (useWhatnot) {
+      pastedResults = parseWhatnotOrders(text);
+      if (pastedResults.length > 0) {
+        detectedLabel.textContent = 'Detected: Whatnot';
+        detectedLabel.classList.remove('hidden');
+      } else {
+        notFoundHint.textContent = "Looked like Whatnot, but couldn't find the item - check the paste includes the \"Order Details\" section.";
         notFoundHint.classList.remove('hidden');
       }
     } else {
@@ -2569,6 +2580,7 @@ async function main() {
     forcedShopHint = isActive ? null : 'forbidden_planet';
     e.target.classList.toggle('active', !isActive);
     document.getElementById('paste-shop-hint-ebay').classList.remove('active');
+    document.getElementById('paste-shop-hint-whatnot').classList.remove('active');
   });
 
   document.getElementById('paste-shop-hint-ebay').addEventListener('click', (e) => {
@@ -2576,6 +2588,15 @@ async function main() {
     forcedShopHint = isActive ? null : 'ebay';
     e.target.classList.toggle('active', !isActive);
     document.getElementById('paste-shop-hint-fp').classList.remove('active');
+    document.getElementById('paste-shop-hint-whatnot').classList.remove('active');
+  });
+
+  document.getElementById('paste-shop-hint-whatnot').addEventListener('click', (e) => {
+    const isActive = e.target.classList.contains('active');
+    forcedShopHint = isActive ? null : 'whatnot';
+    e.target.classList.toggle('active', !isActive);
+    document.getElementById('paste-shop-hint-fp').classList.remove('active');
+    document.getElementById('paste-shop-hint-ebay').classList.remove('active');
   });
 
   wireRemoveButtons('cal-agenda');

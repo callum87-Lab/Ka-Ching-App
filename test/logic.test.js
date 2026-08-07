@@ -1,4 +1,4 @@
-import { validateItemInput, formatCurrency, computeStillDueTotal, sortItemsByReleaseDate, groupItemsByReleaseDate, filterItems, computeAveragePrice, findPriciestItem, topExpensiveItems, groupSpendByShop, buildCalendarGrid, computeMonthSpend, computeBudgetProgress, parsePastedText, computePreorderVsReleased, computeCancelledSavings, findMostExpensiveMonth, findBusiestWeekday, computeShippingStats, sortItemsBy, computeCycleBounds, computeCycleSpend, buildCsvExport, buildJsonBackup, parseJsonBackup, findTomorrowReleases, buildTomorrowNotification, filterByShop, computeYearStats, buildMonthlySpendTrend, buildIcsExport, computeSearchTotals, computeShippingRatioPct, computePreorderPct, computeEffectiveBudget, findNextWeekReleases, buildWeeklyNotification, findAwaitingCharge, buildMonthlySpendTrendRange, buildWeeklySpendTrend, groupSpendByShopWithSellers, assignShopColor, matchesStatusFilter, shopGroupName, looksLikeForbiddenPlanet, parseForbiddenPlanetOrders, hasActiveSearchFilter, itemsInMonth, formatShipmentDateLabel, formatSearchDateLabel, groupItemsByDateAndShop, findDuplicateGroups, findGhostItems, findRecentlyCancelled, looksLikeEbay, parseEbayOrders, parseGenericOrder, findUpcomingReleases, computeAvgVsPriciestIssuePct, computeAllTimeComicsVsShippingSplit, computeWeekdayReleaseChart, computePriceCreep, computeOrderShippingTotals, computeShippingEstimate, extractFpDeclaredTotals, computeCalibratedShippingSamples, computeStillDueTotalWithShipping, computeSpentRemainingWithShipping, countAllTimeMonthsWithData, computeMonthSpendWithFallback } from '../src/logic.js';
+import { validateItemInput, formatCurrency, computeStillDueTotal, sortItemsByReleaseDate, groupItemsByReleaseDate, filterItems, computeAveragePrice, findPriciestItem, topExpensiveItems, groupSpendByShop, buildCalendarGrid, computeMonthSpend, computeBudgetProgress, parsePastedText, computePreorderVsReleased, computeCancelledSavings, findMostExpensiveMonth, findBusiestWeekday, computeShippingStats, sortItemsBy, computeCycleBounds, computeCycleSpend, buildCsvExport, buildJsonBackup, parseJsonBackup, findTomorrowReleases, buildTomorrowNotification, filterByShop, computeYearStats, buildMonthlySpendTrend, buildIcsExport, computeSearchTotals, computeShippingRatioPct, computePreorderPct, computeEffectiveBudget, findNextWeekReleases, buildWeeklyNotification, findAwaitingCharge, buildMonthlySpendTrendRange, buildWeeklySpendTrend, groupSpendByShopWithSellers, assignShopColor, matchesStatusFilter, shopGroupName, looksLikeForbiddenPlanet, parseForbiddenPlanetOrders, hasActiveSearchFilter, itemsInMonth, formatShipmentDateLabel, formatSearchDateLabel, groupItemsByDateAndShop, findDuplicateGroups, findGhostItems, findRecentlyCancelled, looksLikeEbay, parseEbayOrders, looksLikeWhatnot, parseWhatnotOrders, parseGenericOrder, findUpcomingReleases, computeAvgVsPriciestIssuePct, computeAllTimeComicsVsShippingSplit, computeWeekdayReleaseChart, computePriceCreep, computeOrderShippingTotals, computeShippingEstimate, extractFpDeclaredTotals, computeCalibratedShippingSamples, computeStillDueTotalWithShipping, computeSpentRemainingWithShipping, countAllTimeMonthsWithData, computeMonthSpendWithFallback } from '../src/logic.js';
 import assert from 'node:assert/strict';
 
 let passed = 0;
@@ -1848,6 +1848,45 @@ test('a paste with several separate orders never gets a postage figure attached 
   const items = parseEbayOrders(text);
   assert.equal(items.length, 2);
   assert.ok(items.every(i => i.shipping === undefined));
+});
+
+console.log('looksLikeWhatnot / parseWhatnotOrders');
+test('real Whatnot confirmation email - item, price, order number, shipping, and charge status all extracted', () => {
+  const text = [
+    'Thanks for your purchase from clearance_sales on Whatnot!',
+    '=========================================================',
+    "Thanks for your order! The seller should ship your order within 3 business days, and we'll email you a tracking number as soon as it's available.",
+    'In the meantime, check the status of the order by clicking the link(s) below.',
+    '### Order Details',
+    'Funko POP! Comic Covers Star Wars Boba Fett #04 Vinyl Figure Collectible',
+    'Order #1243803335',
+    'Order Total: £15.27',
+    'View Order', 'View Order',
+    'Subtotal', '£12.00',
+    'Tax (Included)', '£0.00',
+    'Shipping', '£3.27',
+    'Total', '£15.27',
+    '### Customer Information',
+    '#### Shipping Address', 'Callum Draper', '12 Hovenden Gardens', 'Nottingham, Nottingham NG7 5FZ', 'GB',
+    '#### Billing Address', 'Callum Draper', '12 Hovenden Gardens', 'Nottingham, Nottingham NG7 5FZ', 'GB',
+    '#### Payment Method', 'Paypal - callumsaintclair87@protonmail.com',
+  ].join('\n');
+  assert.equal(looksLikeWhatnot(text), true);
+  const items = parseWhatnotOrders(text);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].name, 'Funko POP! Comic Covers Star Wars Boba Fett #04 Vinyl Figure Collectible');
+  assert.equal(items[0].price, 12.00);
+  assert.equal(items[0].order_number, '1243803335');
+  assert.equal(items[0].shop, 'Whatnot - clearance_sales');
+  assert.equal(items[0].shipping, 3.27);
+  assert.equal(items[0].charge_status, 'charged');
+  assert.equal(items[0].release_date, null);
+});
+
+test('text with no "Order Details" section or seller line is not mistaken for Whatnot', () => {
+  const text = 'Order #12345\nSome random item\n£9.99\nShipping\n£2.00';
+  assert.equal(looksLikeWhatnot(text), false);
+  assert.deepEqual(parseWhatnotOrders(text), []);
 });
 
 console.log('parseGenericOrder');
