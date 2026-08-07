@@ -1,6 +1,6 @@
 {
   "name": "ka-ching-app",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Ka-Ching! mobile app - local-only comic pre-order tracker (Stage 1: manual entry)",
   "private": true,
   "license": "AGPL-3.0-only",

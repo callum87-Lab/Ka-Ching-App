@@ -608,8 +608,16 @@ export function computeCycleBounds(cycle, referenceDate) {
   return { start, end };
 }
 
-function isoDate(d) {
-  return d.toISOString().slice(0, 10);
+export function isoDate(d) {
+  // Deliberately local components (getFullYear/getMonth/getDate), not
+  // toISOString() - that converts through UTC first, which silently
+  // shifts the date by a day for anyone in a timezone ahead of UTC
+  // (e.g. the UK during BST: local midnight Aug 15 is 23:00 UTC on
+  // Aug 14, so toISOString() would report the 14th).
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 /** Spend within the current budget cycle (whichever type is chosen),
@@ -693,7 +701,7 @@ export function findRecentlyCancelled(items, limit = 15, referenceDate = new Dat
  * and unmarked - worth a look, since the retailer usually charges right
  * around release day. Mirrors the web app's "Awaiting charge" list. */
 export function findAwaitingCharge(items, referenceDate) {
-  const todayIso = isoDate(new Date(Date.UTC(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate())));
+  const todayIso = isoDate(referenceDate);
   return items
     .filter(i => i.status !== 'cancelled' && i.charge_status !== 'charged' && i.release_date && i.release_date < todayIso)
     .map(i => ({ ...i, days_late: Math.round((new Date(todayIso) - new Date(i.release_date)) / 86400000) }))

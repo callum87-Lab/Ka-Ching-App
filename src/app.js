@@ -34,6 +34,7 @@ import {
   computeShippingEstimate,
   extractFpDeclaredTotals,
   computeCalibratedShippingSamples,
+  isoDate,
 } from './logic.js';
 
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -2325,7 +2326,7 @@ async function main() {
     : '';
   await updateConflictBanner();
 
-  document.getElementById('about-version').textContent = 'Ka-Ching! App v1.2.0';
+  document.getElementById('about-version').textContent = 'Ka-Ching! App v1.2.1';
 
   const devToolsUnlocked = await getSetting('dev_tools_unlocked', false);
   if (devToolsUnlocked) {
@@ -2762,7 +2763,7 @@ async function main() {
   document.getElementById('search-totals-row').addEventListener('click', async (e) => {
     if (!e.target.closest('#search-csv-btn')) return;
     const csv = buildCsvExport(lastSearchResults);
-    const filename = `kaching-search-${new Date().toISOString().slice(0, 10)}.csv`;
+    const filename = `kaching-search-${isoDate(new Date())}.csv`;
     await writeAndShare(filename, csv, 'text/csv');
   });
 
@@ -2877,7 +2878,7 @@ async function main() {
 
   document.getElementById('cal-export-ics-btn').addEventListener('click', async () => {
     const ics = buildIcsExport(allItemsCache);
-    const filename = `kaching-calendar-${new Date().toISOString().slice(0, 10)}.ics`;
+    const filename = `kaching-calendar-${isoDate(new Date())}.ics`;
     try {
       const result = await Filesystem.writeFile({
         path: filename, data: ics, directory: Directory.Documents, encoding: Encoding.UTF8,
@@ -3064,7 +3065,7 @@ async function main() {
 
   document.getElementById('settings-export-csv-btn').addEventListener('click', async () => {
     const csv = buildCsvExport(allItemsCache);
-    const filename = `kaching-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    const filename = `kaching-export-${isoDate(new Date())}.csv`;
     await writeAndShare(filename, csv, 'text/csv');
   });
 
@@ -3089,7 +3090,7 @@ async function main() {
 
   document.getElementById('settings-export-json-btn').addEventListener('click', async () => {
     const json = buildJsonBackup(allItemsCache);
-    const filename = `kaching-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    const filename = `kaching-backup-${isoDate(new Date())}.json`;
     await writeAndShare(filename, json, 'application/json');
   });
 
